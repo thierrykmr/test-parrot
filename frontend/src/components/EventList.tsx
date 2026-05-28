@@ -10,10 +10,20 @@ interface Props {
   onSortToggle: () => void;
 }
 
-function BatteryBar({ value }: { value: number }) {
+function BatteryBar({ value, isAnomaly }: { value: number; isAnomaly: boolean }) {
   const pct = Math.max(0, Math.min(100, value));
-  const color =
-    pct > 60 ? "var(--green)" : pct > 30 ? "var(--yellow)" : "var(--red)";
+  
+  let color = "var(--green)";
+  if (isAnomaly && (value < 0 || value > 100)) {
+    color = "var(--red)";
+  } else if (pct > 60) {
+    color = "var(--green)";
+  } else if (pct > 30) {
+    color = "var(--yellow)";
+  } else {
+    color = "var(--red)";
+  }
+
   return (
     <div className="battery-bar-wrapper" title={`${value}%`}>
       <div
@@ -58,7 +68,7 @@ export function EventList({
           {data ? `${data.total.toLocaleString()} événements` : "—"}
           {data && data.anomaly_count > 0 && (
             <span className="anomaly-badge">
-              {data.anomaly_count} anomalie{data.anomaly_count > 1 ? "s" : ""}
+              {data.anomaly_count} anomalie{data.anomaly_count > 1 ? "s" : ""} sur cette page
             </span>
           )}
         </span>
@@ -81,36 +91,49 @@ export function EventList({
           </tr>
         </thead>
         <tbody>
-          {data?.items.map((event) => (
-            <tr
-              key={event.id}
-              className={event.is_anomaly ? "row-anomaly" : ""}
-            >
-              <td>{event.id}</td>
-              <td>
-                <span className="chip chip-device">{event.device}</span>
-              </td>
-              <td>
-                <span className={`chip chip-status chip-${event.status}`}>
-                  {event.status}
-                </span>
-              </td>
-              <td>
-                <BatteryBar value={event.battery} />
-              </td>
-              <td className="ts">{formatTimestamp(event.timestamp)}</td>
-              <td>
-                {event.is_anomaly && (
-                  <span
-                    className="anomaly-icon"
-                    title={event.anomaly_reason ?? ""}
-                  >
-                    ⚠
+          {data?.items.map((event) => {
+            const reasons = event.anomaly_reason ? event.anomaly_reason.split(", ") : [];
+            return (
+              <tr
+                key={event.id}
+                className={event.is_anomaly ? "row-anomaly" : ""}
+              >
+                <td>{event.id}</td>
+                <td>
+                  <span className="chip chip-device">{event.device}</span>
+                </td>
+                <td>
+                  <span className={`chip chip-status chip-${event.status}`}>
+                    {event.status}
                   </span>
-                )}
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>
+                  <BatteryBar value={event.battery} isAnomaly={event.is_anomaly} />
+                </td>
+                <td className="ts">{formatTimestamp(event.timestamp)}</td>
+                <td>
+                  {event.is_anomaly && (
+                    <div className="anomaly-container">
+                      <span className="anomaly-trigger-badge">
+                        ⚠ Anomalie
+                      </span>
+                      <div className="anomaly-tooltip">
+                        <strong style={{ display: "block", marginBottom: "6px", color: "#fca5a5" }}>
+                          Anomalie détectée
+                        </strong>
+                        {reasons.map((r, i) => (
+                          <div key={i} className="anomaly-reason-item">
+                            <span className="anomaly-reason-bullet">•</span>
+                            <span>{r}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
           {data?.items.length === 0 && !loading && (
             <tr>
               <td colSpan={6} className="empty-state">
