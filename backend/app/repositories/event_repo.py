@@ -30,15 +30,20 @@ async def fetch_events(
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
     # COUNT(*) OVER() computes the total without a second query
     order = "ASC" if sort == "asc" else "DESC"
+    
+    limit_clause = ""
+    if limit != -1:
+        limit_clause = "LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+
     sql = f"""
         SELECT id, device, status, battery, timestamp,
                COUNT(*) OVER() AS _total
         FROM events
         {where}
         ORDER BY timestamp {order}
-        LIMIT ? OFFSET ?
+        {limit_clause}
     """
-    params.extend([limit, offset])
 
     async with aiosqlite.connect(get_db_path()) as db:
         db.row_factory = aiosqlite.Row

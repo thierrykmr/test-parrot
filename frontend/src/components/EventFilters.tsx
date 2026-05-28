@@ -51,6 +51,15 @@ export function EventFilters({ filters, onChange }: Props) {
           ))}
         </select>
       </label>
+
+      <label className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={filters.anomalyOnly}
+          onChange={(e) => onChange({ ...filters, anomalyOnly: e.target.checked })}
+        />
+        <span className="checkbox-text">Anomalies uniquement</span>
+      </label>
     </div>
   );
 }

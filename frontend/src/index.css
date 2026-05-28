@@ -207,6 +207,26 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
 .filters select:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 10px rgba(59, 130, 246, 0.15); }
 .filters select:hover { border-color: rgba(255,255,255,0.2); }
 
+.filters label.checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: auto;
+  margin-bottom: 8px;
+  text-transform: none;
+  font-size: 0.9rem;
+  letter-spacing: normal;
+  color: var(--text);
+  user-select: none;
+}
+.filters label.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--red);
+  cursor: pointer;
+}
+
 /* ── Table ── */
 .event-list {
   background: var(--surface);

@@ -43,6 +43,7 @@ export function buildEventsUrl(
   const params = new URLSearchParams();
   if (filters.device) params.set("device", filters.device);
   if (filters.status) params.set("status", filters.status);
+  if (filters.anomalyOnly) params.set("anomaly_only", "true");
   params.set("limit", String(limit));
   params.set("offset", String(offset));
   params.set("sort", sort);

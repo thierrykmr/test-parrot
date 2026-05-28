@@ -92,7 +92,7 @@ export function EventList({
         </thead>
         <tbody>
           {data?.items.map((event) => {
-            const reasons = event.anomaly_reason ? event.anomaly_reason.split(", ") : [];
+            const reasons = event.anomaly_reason ? event.anomaly_reason.split("; ") : [];
             return (
               <tr
                 key={event.id}

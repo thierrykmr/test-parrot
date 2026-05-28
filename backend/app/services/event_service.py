@@ -12,6 +12,7 @@ async def search_events(
     limit: int,
     offset: int,
     sort: Literal["asc", "desc"],
+    anomaly_only: bool = False,
 ) -> EventListResponse:
     if limit < 1 or limit > MAX_LIMIT:
         raise HTTPException(
@@ -21,20 +22,35 @@ async def search_events(
     if offset < 0:
         raise HTTPException(status_code=422, detail="offset must be >= 0")
 
-    rows, total = await event_repo.fetch_events(
-        device=device,
-        status=status,
-        limit=limit,
-        offset=offset,
-        sort=sort,
-    )
-
-    # Validate each row through Pydantic — flags anomalies without crashing
-    parsed = [EventRaw.model_validate(r).to_out() for r in rows]
-    anomaly_count = sum(1 for e in parsed if e.is_anomaly)
+    if anomaly_only:
+        # Fetch all matching records to validate and filter anomalies in memory
+        rows, _ = await event_repo.fetch_events(
+            device=device,
+            status=status,
+            limit=-1,
+            offset=0,
+            sort=sort,
+        )
+        all_parsed = [EventRaw.model_validate(r).to_out() for r in rows]
+        anomalies = [e for e in all_parsed if e.is_anomaly]
+        
+        total = len(anomalies)
+        paginated = anomalies[offset : offset + limit]
+        anomaly_count = len(paginated)
+        items = paginated
+    else:
+        rows, total = await event_repo.fetch_events(
+            device=device,
+            status=status,
+            limit=limit,
+            offset=offset,
+            sort=sort,
+        )
+        items = [EventRaw.model_validate(r).to_out() for r in rows]
+        anomaly_count = sum(1 for e in items if e.is_anomaly)
 
     return EventListResponse(
-        items=parsed,
+        items=items,
         total=total,
         limit=limit,
         offset=offset,

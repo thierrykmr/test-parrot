@@ -28,7 +28,11 @@ export function useEvents(filters: FiltersState): UseEventsResult {
   const prevFiltersRef = useRef(filters);
   useEffect(() => {
     const prev = prevFiltersRef.current;
-    if (prev.device !== filters.device || prev.status !== filters.status) {
+    if (
+      prev.device !== filters.device ||
+      prev.status !== filters.status ||
+      prev.anomalyOnly !== filters.anomalyOnly
+    ) {
       setPage(0);
     }
     prevFiltersRef.current = filters;

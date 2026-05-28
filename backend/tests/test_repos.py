@@ -5,6 +5,7 @@ import pytest_asyncio  # pyrefly: ignore [missing-import]
 import aiosqlite  # pyrefly: ignore [missing-import]
 import app.database
 from app.repositories import event_repo
+from app.services import event_service
 from app.database import CREATE_TABLE, CREATE_INDEXES
 
 TEST_DB_PATH = Path(__file__).parent / "test_telemetry.db"
@@ -84,3 +85,15 @@ async def test_fetch_stats_excludes_anomalies():
     assert statuses.get("idle") == 1   # 1 valid idle (the -5 battery idle is excluded)
     assert statuses.get("takeoff") == 1
     assert statuses.get("landing") == 1
+
+@pytest.mark.asyncio
+async def test_search_events_anomaly_only():
+    res = await event_service.search_events(device=None, status=None, limit=10, offset=0, sort="asc", anomaly_only=True)
+    assert res.total == 3
+    assert len(res.items) == 3
+    assert all(e.is_anomaly for e in res.items)
+
+    res_page = await event_service.search_events(device=None, status=None, limit=1, offset=1, sort="asc", anomaly_only=True)
+    assert res_page.total == 3
+    assert len(res_page.items) == 1
+    assert res_page.items[0].id == res.items[1].id

@@ -30,4 +30,5 @@ export interface StatsResponse {
 export interface FiltersState {
   device: string;
   status: string;
+  anomalyOnly: boolean;
 }

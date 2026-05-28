@@ -19,6 +19,7 @@ async def search_events(
     limit: Annotated[int, Query(ge=1, le=100, description="Max results per page")] = 20,
     offset: Annotated[int, Query(ge=0, description="Pagination offset")] = 0,
     sort: Annotated[Literal["asc", "desc"], Query(description="Sort order by timestamp")] = "desc",
+    anomaly_only: Annotated[bool, Query(description="Only show events flagged as anomalies")] = False,
 ) -> EventListResponse:
     start = time.perf_counter()
 
@@ -28,6 +29,7 @@ async def search_events(
         limit=limit,
         offset=offset,
         sort=sort,
+        anomaly_only=anomaly_only,
     )
 
     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
@@ -43,6 +45,7 @@ async def search_events(
                     "limit": limit,
                     "offset": offset,
                     "sort": sort,
+                    "anomaly_only": anomaly_only,
                 },
                 "results_count": result.total,
                 "page_count": len(result.items),

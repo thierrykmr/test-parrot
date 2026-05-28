@@ -10,7 +10,7 @@ import type { FiltersState } from "./types";
 const AUTO_REFRESH_MS = 30_000;
 
 export default function App() {
-  const [filters, setFilters] = useState<FiltersState>({ device: "", status: "" });
+  const [filters, setFilters] = useState<FiltersState>({ device: "", status: "", anomalyOnly: false });
   const [globalTick, setGlobalTick] = useState(0);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
