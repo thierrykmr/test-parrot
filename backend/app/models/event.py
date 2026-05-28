@@ -44,6 +44,16 @@ class EventRaw(BaseModel):
             reasons.append(f"battery out of range ({self.battery})")
         if self.status not in KNOWN_STATUSES:
             reasons.append(f"unknown status '{self.status}'")
+        
+        # Check for out-of-order timestamp (before 2026-01-01)
+        from datetime import timezone
+        baseline = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        ts = self.timestamp
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        if ts < baseline:
+            reasons.append(f"timestamp out of order ({self.timestamp.isoformat()})")
+
         self._anomaly_reasons = reasons
         return self
 

@@ -1,4 +1,5 @@
 from typing import Literal
+# pyrefly: ignore [missing-import]
 import aiosqlite
 from app.database import get_db_path
 
@@ -65,11 +66,28 @@ async def fetch_stats() -> dict:
     """
     Aggregation done entirely in SQL — no Python loop over rows.
     Returns raw dict with total, avg_battery, and per-status breakdown.
+    Filters out anomalous data from averages and breakdown counts.
     """
-    sql_global = "SELECT COUNT(*) AS total, AVG(battery) AS avg_battery FROM events"
-    sql_by_status = (
-        "SELECT status, COUNT(*) AS count FROM events GROUP BY status ORDER BY count DESC"
-    )
+    sql_global = """
+        SELECT 
+            COUNT(*) AS total,
+            AVG(CASE 
+                WHEN battery BETWEEN 0 AND 100 
+                     AND status IN ('flying', 'landing', 'idle', 'takeoff')
+                     AND timestamp >= '2026-01-01' 
+                THEN battery 
+            END) AS avg_battery
+        FROM events
+    """
+    sql_by_status = """
+        SELECT status, COUNT(*) AS count 
+        FROM events 
+        WHERE status IN ('flying', 'landing', 'idle', 'takeoff')
+          AND battery BETWEEN 0 AND 100
+          AND timestamp >= '2026-01-01'
+        GROUP BY status 
+        ORDER BY count DESC
+    """
 
     async with aiosqlite.connect(get_db_path()) as db:
         db.row_factory = aiosqlite.Row
